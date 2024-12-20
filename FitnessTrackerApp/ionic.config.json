@@ -1,0 +1,7 @@
+{
+  "name": "FitnessTrackerApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react-vite"
+}
