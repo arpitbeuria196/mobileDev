@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import WorkoutCard from '../components/WorkoutCard';
 import {
   IonContent,
   IonHeader,
@@ -18,20 +19,12 @@ import {
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { auth, firestore } from '../config/firebaseConfig';
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  updateDoc,
-  deleteField,
-  Timestamp,
-  onSnapshot,
-} from 'firebase/firestore';
+import { doc, getDoc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { trash, pencil, logOutOutline } from 'ionicons/icons';
+import { motion } from 'framer-motion';
 import './Home.css';
-import FoodCard from '../components/Food';  // Import the FoodCard component
+import FoodCard from '../components/Food';
 
 const Home: React.FC = () => {
   const history = useHistory();
@@ -40,14 +33,14 @@ const Home: React.FC = () => {
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
-  
-  const [minCalories, setMinCalories] = useState<number>(0);  // State for minimum calories
-  const [maxCalories, setMaxCalories] = useState<number>(100);  // State for maximum calories
+
+  const [minCalories, setMinCalories] = useState<number>(0);
+  const [maxCalories, setMaxCalories] = useState<number>(100);
   const [foodCalories, setFoodCalories] = useState<number>(0);
   const [foodNutrition, setFoodNutrition] = useState<any>(null);
   const [foodImage, setFoodImage] = useState<any>(null);
+  const [caloriesTaken, setCaloriesTaken] = useState<number>(0);
 
-  // Fetch workouts in real-time
   const fetchWorkouts = (userId: string) => {
     const userDocRef = doc(firestore, 'users', userId);
     const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
@@ -61,7 +54,6 @@ const Home: React.FC = () => {
     return unsubscribe;
   };
 
-  // Initialize user and set up workout listener
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -75,15 +67,15 @@ const Home: React.FC = () => {
     return () => unsubscribe();
   }, [history]);
 
-  // Save a workout to Firestore
   const handleSaveWorkout = async () => {
     if (!activity || !duration) return;
 
     if (user) {
       const workoutData = {
+        id: new Date().getTime().toString(),
         activity,
         duration: parseInt(duration),
-        caloriesBurned: foodCalories, // Store the calories burned from food
+        caloriesBurned: caloriesTaken,
         date: Timestamp.fromDate(new Date()),
       };
 
@@ -102,11 +94,12 @@ const Home: React.FC = () => {
         await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
         setActivity('');
         setDuration('');
-        setMinCalories(0); // Reset calories values
-        setMaxCalories(500); // Reset calories values
+        setMinCalories(0);
+        setMaxCalories(100);
         setFoodCalories(0);
         setFoodImage('');
         setFoodNutrition(null);
+        setCaloriesTaken(0);
         setEditIndex(null);
       } catch (error) {
         console.error('Error saving workout:', error);
@@ -114,17 +107,14 @@ const Home: React.FC = () => {
     }
   };
 
-  // Handle food API search (getting nutrition and calories)
   const handleSearchFood = async () => {
     try {
       const response = await fetch(
         `https://api.spoonacular.com/recipes/findByNutrients?minCalories=${minCalories}&maxCalories=${maxCalories}&number=10&apiKey=8edf976075e44736b9986ba74d428985`
       );
       const data = await response.json();
-      console.log(data);
 
       if (data && data.length > 0) {
-        // Set multiple food items as the query results
         const foodItems = data.map((item: any) => ({
           calories: item.calories,
           carbs: item.carbs,
@@ -133,20 +123,22 @@ const Home: React.FC = () => {
           image: item.image,
         }));
 
-        // Update state with the food items
         setFoodCalories(foodItems[0]?.calories || 0);
-        setFoodNutrition(foodItems); // Store multiple nutrition results
-        setFoodImage(foodItems[0]?.image); // Set the image of the first item
+        setFoodNutrition(foodItems);
+        setFoodImage(foodItems[0]?.image);
       } else {
-        setFoodCalories(0); // If no results, set calories to 0
-        setFoodNutrition(null); // Clear nutrition info
+        setFoodCalories(0);
+        setFoodNutrition(null);
       }
     } catch (error) {
       console.error('Error fetching food data:', error);
     }
   };
 
-  // Delete a workout from Firestore
+  const caloriesManagement = (calories: number) => {
+    setCaloriesTaken((prevCalories) => (prevCalories || 0) + calories);
+  };
+
   const handleDeleteWorkout = async (workoutId: string) => {
     try {
       const userDocRef = doc(firestore, 'users', user?.uid);
@@ -155,11 +147,21 @@ const Home: React.FC = () => {
       if (userDoc.exists()) {
         const userData = userDoc.data();
         const updatedWorkouts = userData?.workouts.filter((workout: any) => workout.id !== workoutId);
-        await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
+
+        if (updatedWorkouts) {
+          await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
+        }
       }
     } catch (error) {
       console.error('Error deleting workout:', error);
     }
+  };
+
+  const handleEditWorkout = (index: number) => {
+    const workoutToEdit = workouts[index];
+    setActivity(workoutToEdit.activity);
+    setDuration(workoutToEdit.duration.toString());
+    setEditIndex(index);
   };
 
   return (
@@ -172,54 +174,68 @@ const Home: React.FC = () => {
           </IonButton>
         </IonToolbar>
       </IonHeader>
-      <IonContent className="ion-padding" fullscreen>
-        <div className="home-container">
-          <IonItem>
+      <IonContent className="ion-padding home-container" fullscreen>
+        <motion.div
+          className="form-section"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2>Log Your Workout</h2>
+          <IonItem className="input-item">
             <IonLabel position="floating">Activity</IonLabel>
             <IonInput
               value={activity}
               onIonChange={(e) => setActivity(e.detail.value!)}
-              placeholder="Enter your workout activity"
+              placeholder="e.g., Running"
             />
           </IonItem>
 
-          <IonItem>
+          <IonItem className="input-item">
             <IonLabel position="floating">Duration (minutes)</IonLabel>
             <IonInput
               value={duration}
               onIonChange={(e) => setDuration(e.detail.value!)}
               type="number"
-              placeholder="Enter workout duration"
+              placeholder="e.g., 30"
             />
           </IonItem>
 
-          <IonButton expand="block" onClick={handleSaveWorkout}>
-            {editIndex !== null ? 'Update Workout' : 'Save Workout'}
-          </IonButton>
+          <IonItem className="input-item">
+            <IonLabel position="floating">Calories Burned</IonLabel>
+            <IonInput value={caloriesTaken || 0} readonly />
+          </IonItem>
+        </motion.div>
 
-          {/* Food Intake Section */}
-          <IonItem>
-            <IonLabel position="floating">Minimum Calories</IonLabel>
+        <motion.div
+          className="food-search-section"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h2>Search Food by Calories</h2>
+          <IonItem className="input-item">
+            <IonLabel position="floating">Min Calories</IonLabel>
             <IonInput
               value={minCalories}
               onIonChange={(e) => setMinCalories(Number(e.detail.value!))}
               type="number"
-              placeholder="Enter min calories"
+              placeholder="e.g., 100"
             />
           </IonItem>
 
-          <IonItem>
-            <IonLabel position="floating">Maximum Calories</IonLabel>
+          <IonItem className="input-item">
+            <IonLabel position="floating">Max Calories</IonLabel>
             <IonInput
               value={maxCalories}
               onIonChange={(e) => setMaxCalories(Number(e.detail.value!))}
               type="number"
-              placeholder="Enter max calories"
+              placeholder="e.g., 500"
             />
           </IonItem>
 
           <IonButton expand="block" onClick={handleSearchFood}>
-            Get Nutrition & Calories
+            Search Foods
           </IonButton>
 
           {foodNutrition && (
@@ -229,6 +245,7 @@ const Home: React.FC = () => {
                   <IonCol key={index} size="6">
                     <FoodCard
                       foodCalories={food.calories}
+                      caloriesManagement={caloriesManagement}
                       foodNutrition={food}
                       foodImage={food.image}
                     />
@@ -237,23 +254,30 @@ const Home: React.FC = () => {
               </IonRow>
             </IonGrid>
           )}
+        </motion.div>
 
-          <IonList>
-            {workouts.length > 0 ? (
-              workouts.map((workout: any, index: number) => (
-                <IonItem key={index}>
-                  <IonLabel>
-                    {workout.activity} for {workout.duration} minutes, burned {workout.caloriesBurned} calories
-                  </IonLabel>
-                  <IonIcon icon={pencil} />
-                  <IonIcon icon={trash} />
-                </IonItem>
-              ))
-            ) : (
-              <IonText>No workouts saved yet</IonText>
-            )}
-          </IonList>
-        </div>
+        <motion.div
+          className="save-workout-section"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <IonButton expand="block" onClick={handleSaveWorkout}>
+            {editIndex !== null ? 'Save Changes' : 'Save Workout'}
+          </IonButton>
+        </motion.div>
+
+        <IonList className="workout-list">
+        {workouts.map((workout, index) => (
+          <WorkoutCard
+            key={workout.id}
+            workout={workout}
+            onDelete={() => handleDeleteWorkout(workout.id)}
+            onEdit={() => handleEditWorkout(index)}
+          />
+        ))}
+      </IonList>
+
       </IonContent>
     </IonPage>
   );

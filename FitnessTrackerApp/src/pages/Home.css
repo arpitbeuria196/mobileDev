@@ -1,0 +1,98 @@
+.food-slider-section {
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+  }
+  
+  .swiper {
+    margin: 15px 0;
+  }
+  
+  .swiper-slide {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+  }
+  
+  .swiper-slide > div {
+    width: 100%; /* Adjust width for card responsiveness */
+  }
+  
+
+.home-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f9f9f9;
+  }
+  
+  .form-section,
+  .food-search-section,
+  .workout-list-section {
+    padding: 10px;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    margin: 15px 0;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  h2 {
+    font-size: 24px; 
+    font-weight: bold; 
+    text-align: center; /* Center the heading */
+    margin-bottom: 15px; 
+    letter-spacing: 1px;
+  }
+  
+  
+  .primary-button {
+    margin-top: 10px;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #ff7e5f, #feb47b);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .workout-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: #fafafa;
+    border-radius: 8px;
+    margin: 8px 0;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .workout-item:hover {
+    transform: scale(1.05);
+  }
+  
+  .edit-icon,
+  .delete-icon {
+    margin-left: 10px;
+    font-size: 20px;
+    color: #ff7e5f;
+    cursor: pointer;
+  }
+  
+  .no-workouts-text {
+    color: #999;
+    text-align: center;
+    margin-top: 20px;
+  }
+  .input-item ion-label {
+    margin-bottom: 12px; 
+  }
+  
+  .input-item ion-input {
+    margin-top: 8px;      
+    padding-left: 8px;   
+  }
+  
+    
