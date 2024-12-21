@@ -5,6 +5,9 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     margin: 15px 0;
   }
+  .custom-placeholder::part(input) {
+    --placeholder-color: #D3D3D3; /* Light grey color */
+  }
   
   .swiper {
     margin: 15px 0;

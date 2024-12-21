@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import WorkoutCard from '../components/WorkoutCard';
+import { Geolocation } from '@ionic-native/geolocation';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { File } from '@ionic-native/file';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+
+
+
 import {
   IonContent,
   IonHeader,
@@ -16,12 +23,13 @@ import {
   IonGrid,
   IonRow,
   IonCol,
+  IonImg,
 } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
 import { auth, firestore } from '../config/firebaseConfig';
 import { doc, getDoc, setDoc, onSnapshot, Timestamp } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { trash, pencil, logOutOutline } from 'ionicons/icons';
+import { logOutOutline } from 'ionicons/icons';
 import { motion } from 'framer-motion';
 import './Home.css';
 import FoodCard from '../components/Food';
@@ -34,12 +42,101 @@ const Home: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const [minCalories, setMinCalories] = useState<number>(0);
-  const [maxCalories, setMaxCalories] = useState<number>(100);
-  const [foodCalories, setFoodCalories] = useState<number>(0);
+  const [minCalories, setMinCalories] = useState<number>();
+  const [maxCalories, setMaxCalories] = useState<number>();
+  const [foodCalories, setFoodCalories] = useState<number>();
   const [foodNutrition, setFoodNutrition] = useState<any>(null);
   const [foodImage, setFoodImage] = useState<any>(null);
-  const [caloriesTaken, setCaloriesTaken] = useState<number>(0);
+  const [caloriesTaken, setCaloriesTaken] = useState<number>();
+  const [caloriesBurnt, setCaloriesBurnt] = useState<number>(); // Default to 5 calories
+  const [calorieMessage, setCalorieMessage] = useState<string>('');
+  const [calorieDifference, setCalorieDifference] = useState<number>(); // To store calorie difference
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+  const [image,setImage] = useState<any>("");
+  const [location, setLocation] = useState<{ lat: number, lng: number }>({
+    lat: 53.349805,  
+    lng: -6.26031,  
+  });
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+const [fetchedImage, setFetchedImage] = useState<string | null>(null); 
+
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  //Take Photo
+
+  const takePhoto = async () => {
+    try {
+      const photo = await Camera.getPhoto({
+        resultType: CameraResultType.Uri, 
+        source: CameraSource.Camera, 
+        quality: 90,
+      });
+  
+      // Get the image URI
+      const imageUrl = photo.webPath; 
+      setUploadedImage(imageUrl); 
+  
+    } catch (error) {
+      console.error("Error taking photo:", error);
+    }
+  };
+
+  
+
+
+  
+  //File Upload
+  const handleFileUpload = async (event: any) => {
+    const file = event.target.files[0];
+    if (!file) return;
+  
+    const reader = new FileReader();
+  
+    reader.onload = async () => {
+      const base64String = reader.result as string;
+  
+      try {
+        setUploadedImage(base64String); 
+  
+        await Filesystem.writeFile({
+          path: `workout_images/${file.name}`,
+          data: base64String.split(',')[1],
+          directory: Directory.Data,
+        });
+      } catch (error) {
+        console.error('Error saving file:', error);
+      }
+    };
+  
+    reader.readAsDataURL(file);
+  };
+  
+  
+  
+  const getCurrentLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setLocation({ lat: latitude, lng: longitude });
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          // You can log the entire error object to see its properties
+          alert(`Error getting location: ${JSON.stringify(error)}`);
+          
+          // Default location as fallback
+          setLocation({ lat: 53.349805, lng: -6.26031 }); 
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by your browser.");
+    }
+  };
+  
+  
 
   const fetchWorkouts = (userId: string) => {
     const userDocRef = doc(firestore, 'users', userId);
@@ -68,20 +165,29 @@ const Home: React.FC = () => {
   }, [history]);
 
   const handleSaveWorkout = async () => {
-    if (!activity || !duration) return;
+    if (!activity || !duration) {
+      alert('Activity and duration are required!');
+      return;
+    }    
+
+    const caloriesBurned = handleCalorieCalculation(activity, parseInt(duration));
 
     if (user) {
       const workoutData = {
         id: new Date().getTime().toString(),
         activity,
         duration: parseInt(duration),
-        caloriesBurned: caloriesTaken,
+        caloriesTaken: caloriesTaken || 0,
+        caloriesBurnt:caloriesBurnt || 0,
+        image: uploadedImage, 
         date: Timestamp.fromDate(new Date()),
       };
 
       try {
         const userDocRef = doc(firestore, 'users', user.uid);
         const userDoc = await getDoc(userDocRef);
+
+        console.log(userDocRef)
 
         let updatedWorkouts = [...workouts];
 
@@ -94,13 +200,14 @@ const Home: React.FC = () => {
         await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
         setActivity('');
         setDuration('');
-        setMinCalories(0);
-        setMaxCalories(100);
+        setCaloriesTaken(0);
+        setCaloriesBurnt(3.2); 
         setFoodCalories(0);
         setFoodImage('');
+        setUploadedImage('')
         setFoodNutrition(null);
-        setCaloriesTaken(0);
         setEditIndex(null);
+        updateCalorieMessage(caloriesBurned); 
       } catch (error) {
         console.error('Error saving workout:', error);
       }
@@ -108,11 +215,14 @@ const Home: React.FC = () => {
   };
 
   const handleSearchFood = async () => {
+    setHasSearched(true);
     try {
       const response = await fetch(
         `https://api.spoonacular.com/recipes/findByNutrients?minCalories=${minCalories}&maxCalories=${maxCalories}&number=10&apiKey=8edf976075e44736b9986ba74d428985`
       );
       const data = await response.json();
+
+      console.log(data);
 
       if (data && data.length > 0) {
         const foodItems = data.map((item: any) => ({
@@ -120,6 +230,7 @@ const Home: React.FC = () => {
           carbs: item.carbs,
           fat: item.fat,
           protein: item.protein,
+          title:item.title,
           image: item.image,
         }));
 
@@ -137,6 +248,34 @@ const Home: React.FC = () => {
 
   const caloriesManagement = (calories: number) => {
     setCaloriesTaken((prevCalories) => (prevCalories || 0) + calories);
+  };
+
+  const handleCalorieCalculation = (activity: string, duration: number) => {
+    const metValues: { [key: string]: number } = {
+      running: 9.8,
+      walking: 3.8,
+      cycling: 8,
+      swimming: 7,
+      yoga: 2.5,
+      weightlifting: 3,
+    };
+
+    const met = metValues[activity.toLowerCase()] || 0;
+    const caloriesBurned = Math.round(met * (user?.weight || 70) * (duration / 60)); // Round to nearest whole number
+    setCaloriesBurnt(caloriesBurned);
+    return caloriesBurned;
+
+  };
+
+  const updateCalorieMessage = (caloriesBurned: number) => {
+    const calorieDiff = caloriesTaken - caloriesBurned;
+    setCalorieDifference(calorieDiff);
+
+    if (calorieDiff < 0) {
+      setCalorieMessage('Keep up the good work! You are burning more than you are eating!');
+    } else {
+      setCalorieMessage('You need to work out more to burn those calories!');
+    }
   };
 
   const handleDeleteWorkout = async (workoutId: string) => {
@@ -164,6 +303,8 @@ const Home: React.FC = () => {
     setEditIndex(index);
   };
 
+  const calorieStatusStyle = calorieDifference < 0 ? { color: 'green' } : { color: 'red' };
+
   return (
     <IonPage>
       <IonHeader>
@@ -186,7 +327,10 @@ const Home: React.FC = () => {
             <IonLabel position="floating">Activity</IonLabel>
             <IonInput
               value={activity}
-              onIonChange={(e) => setActivity(e.detail.value!)}
+              onIonChange={(e) => {
+                setActivity(e.detail.value!);
+                handleCalorieCalculation(e.detail.value!, parseInt(duration)); // Update calories as you type
+              }}
               placeholder="e.g., Running"
             />
           </IonItem>
@@ -195,15 +339,39 @@ const Home: React.FC = () => {
             <IonLabel position="floating">Duration (minutes)</IonLabel>
             <IonInput
               value={duration}
-              onIonChange={(e) => setDuration(e.detail.value!)}
+              onIonChange={(e) => {
+                setDuration(e.detail.value!);
+                handleCalorieCalculation(activity, parseInt(e.detail.value!)); // Update calories when duration is changed
+              }}
               type="number"
               placeholder="e.g., 30"
             />
           </IonItem>
+          <IonButton onClick={takePhoto}>
+          Take a Photo
+        </IonButton>
 
-          <IonItem className="input-item">
-            <IonLabel position="floating">Calories Burned</IonLabel>
-            <IonInput value={caloriesTaken || 0} readonly />
+        {uploadedImage && (
+          <IonImg src={uploadedImage} alt="Uploaded Image" />
+        )}
+
+          <IonItem>
+            <IonLabel>Upload Workout Image</IonLabel>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setUploadedImage(reader.result as string);
+                  };
+                  reader.readAsDataURL(file);
+                }
+              }}
+              style={{ padding: '8px' }}
+            />
           </IonItem>
         </motion.div>
 
@@ -213,6 +381,41 @@ const Home: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
+          <h2>Auutomatic Calories Management</h2>
+          <IonItem className="input-item">
+  <IonLabel position="floating">Calories Gained by Food</IonLabel>
+  <IonInput
+    value={caloriesTaken || 0}
+    readonly
+    className="custom-placeholder"  
+  />
+</IonItem>
+
+<IonItem className="input-item">
+  <IonLabel position="floating">Calories Burned by Exercise</IonLabel>
+  <IonInput
+    placeholder="Default 3.2"
+    value={caloriesBurnt || 0} 
+    readonly
+    className="custom-placeholder" 
+  />
+</IonItem>
+
+<h2> Calorie Difference</h2>
+<IonItem className="input-item">
+  <IonLabel position="floating">Calories Gained - Burned</IonLabel>
+  <IonInput
+    value={caloriesTaken !== undefined && caloriesBurnt !== undefined ? Math.round(caloriesTaken - caloriesBurnt) : 0}
+    readonly
+    style={{
+      color: caloriesTaken !== undefined && caloriesBurnt !== undefined ? (caloriesTaken - caloriesBurnt > 0 ? 'green' : 'red') : 'black',
+    }}
+  />
+</IonItem>
+
+
+
+
           <h2>Search Food by Calories</h2>
           <IonItem className="input-item">
             <IonLabel position="floating">Min Calories</IonLabel>
@@ -233,10 +436,17 @@ const Home: React.FC = () => {
               placeholder="e.g., 500"
             />
           </IonItem>
+          <h2>Add Food Results to Find Calories Gained by Food</h2>
 
           <IonButton expand="block" onClick={handleSearchFood}>
             Search Foods
           </IonButton>
+
+          {!hasSearched && (
+          <IonText color="medium">
+            <p>No Search till yet</p>
+          </IonText>
+        )}
 
           {foodNutrition && (
             <IonGrid>
@@ -267,17 +477,18 @@ const Home: React.FC = () => {
           </IonButton>
         </motion.div>
 
-        <IonList className="workout-list">
-        {workouts.map((workout, index) => (
-          <WorkoutCard
-            key={workout.id}
-            workout={workout}
-            onDelete={() => handleDeleteWorkout(workout.id)}
-            onEdit={() => handleEditWorkout(index)}
-          />
-        ))}
-      </IonList>
+        <h3 style={calorieStatusStyle}>{calorieMessage}</h3>
 
+        <IonList className="workout-list">
+          {workouts.map((workout, index) => (
+            <WorkoutCard
+              key={workout.id}
+              workout={workout}
+              onDelete={() => handleDeleteWorkout(workout.id)}
+              onEdit={() => handleEditWorkout(index)}
+            />
+          ))}
+        </IonList>
       </IonContent>
     </IonPage>
   );

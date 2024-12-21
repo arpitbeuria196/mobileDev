@@ -7,6 +7,7 @@ interface FoodCardProps {
   foodNutrition: {
     carbs: number;
     fat: number;
+    title:String;
     protein: number;
   };
   foodImage: string;
@@ -39,7 +40,7 @@ const FoodCard: React.FC<FoodCardProps> = ({
     <div className="food-card">
       <img className="food-image" src={foodImage} alt="Food" />
       <div className="food-info">
-        <h3 className="food-title">Food Nutrition</h3>
+        <h3 className="food-title">{foodNutrition.title}</h3>
         <p className="food-details">
           <span>Calories:</span> {foodCalories} kcal
         </p>

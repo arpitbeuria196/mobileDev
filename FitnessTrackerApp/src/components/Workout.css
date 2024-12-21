@@ -1,46 +1,57 @@
 .workout-card {
-    margin-bottom: 20px;
-    background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-  }
-  
-  .workout-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-  
-  .workout-card-header {
-    background-color: #4CAF50;
-    color: white;
-    padding: 16px;
-    border-radius: 15px 15px 0 0;
-  }
-  
-  .workout-card-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+    width: 320px;
+    background: #fff;
+    color: black;
+    position: relative;
+    border-radius: 2.5em;
+    padding: 2em;
+    transition: transform 0.4s ease;
   }
   
   .workout-card-content {
-    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 3em;
+    height: 100%;
+    transition: transform 0.4s ease;
   }
   
-  .workout-details {
-    margin-bottom: 15px;
+  .workout-card-top, .workout-card-bottom {
+    display: flex;
+    justify-content: space-between;
   }
   
-  .workout-details p {
-    margin: 5px 0;
-    font-size: 1rem;
+  .workout-card-title, .workout-card-date {
+    margin: 0;
+  }
+  
+  .workout-card-title {
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .workout-card-date {
+    font-weight: 600;
+    font-size: 0.9rem;
     color: #333;
+  }
+  
+  .workout-card-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .workout-card-bottom p {
+    margin: 0;
+    font-weight: 600;
   }
   
   .workout-card-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 15px; /* Increased gap between icons */
   }
   
   .workout-card-actions .edit-btn,
@@ -50,16 +61,59 @@
     transition: background-color 0.3s ease;
   }
   
-  .workout-card-actions .edit-btn:hover {
-    background-color: #ffeb3b;
-  }
-  
+  .workout-card-actions .edit-btn:hover,
   .workout-card-actions .delete-btn:hover {
-    background-color: #f44336;
+    transform: scale(1.2); 
   }
   
   .workout-card-actions .edit-btn,
   .workout-card-actions .delete-btn {
+    font-size: 1.5rem;
+    transition: transform 0.3s ease;
+  }
+  
+  .workout-card-actions .edit-btn:hover,
+  .workout-card-actions .delete-btn:hover {
+    background-color: transparent;
+  }
+  
+  
+  .workout-card-actions .edit-btn,
+  .workout-card-actions .delete-btn {
     font-size: 1.2rem;
+  }
+  
+  .workout-card-image {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  
+  .workout-card-image svg {
+    width: 4em;
+    height: 4em;
+    transition: transform 0.4s ease;
+  }
+  
+  .workout-card:hover {
+    cursor: pointer;
+    transform: scale(0.97);
+  }
+  
+  .workout-card:hover .workout-card-content {
+    transform: scale(0.96);
+  }
+  
+  .workout-card:hover .workout-card-image svg {
+    transform: scale(1.05);
+  }
+  
+  .workout-card:active {
+    transform: scale(0.9);
   }
   
