@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import { useHistory } from 'react-router-dom';
-import { auth, googleProvider } from '../config/firebaseConfig';
+import { auth, googleProvider, firestore } from '../config/firebaseConfig';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
 } from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import './Auth.css';
 
 const Auth: React.FC = () => {
@@ -18,11 +19,30 @@ const Auth: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [isSignedInForm, setIsSignedInForm] = useState(true);
 
+  // Initialize Firestore document for the user
+  const initializeUserDocument = async (userId: string) => {
+    try {
+      const userDocRef = doc(firestore, 'users', userId);
+      const userDoc = await getDoc(userDocRef);
+
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, { workouts: [] }); 
+        console.log('User document initialized.');
+      }
+    } catch (err) {
+      console.error('Error initializing user document:', err);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
       console.log('Google Sign-In Successful:', user);
+
+      // Initialize Firestore document for the user
+      await initializeUserDocument(user.uid);
+
       history.push('/home');
     } catch (err: any) {
       setError(err.message);
