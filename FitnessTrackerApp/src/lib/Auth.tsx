@@ -3,6 +3,7 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/rea
 import { useHistory } from 'react-router-dom';
 import { auth, googleProvider, firestore } from '../config/firebaseConfig';
 import {
+
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -10,6 +11,8 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import './Auth.css';
+import { SplashScreen } from '@capacitor/splash-screen';
+import { useEffect } from 'react';
 
 const Auth: React.FC = () => {
   const history = useHistory();
@@ -18,6 +21,12 @@ const Auth: React.FC = () => {
   const [userName, setUserName] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isSignedInForm, setIsSignedInForm] = useState(true);
+
+  // useEffect(() => {
+  //   setTimeout(() => {
+  //     SplashScreen.hide();
+  //   }, 3000); 
+  // }, []);
 
   // Initialize Firestore document for the user
   const initializeUserDocument = async (userId: string) => {
@@ -33,7 +42,8 @@ const Auth: React.FC = () => {
       console.error('Error initializing user document:', err);
     }
   };
-
+  
+  
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
