@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.technyks.FitnessTrackerApp"
+    namespace "com.technyks.FitFoodTrackerApp"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.technyks.FitnessTrackerApp"
+        applicationId "com.technyks.FitFoodTrackerApp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

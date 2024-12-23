@@ -1,101 +1,236 @@
-.food-slider-section {
-    padding: 10px;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    margin: 15px 0;
-  }
-  .custom-placeholder::part(input) {
-    --placeholder-color: #D3D3D3; /* Light grey color */
-  }
-  
-  .swiper {
-    margin: 15px 0;
-  }
-  
-  .swiper-slide {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: auto;
-  }
-  
-  .swiper-slide > div {
-    width: 100%; /* Adjust width for card responsiveness */
-  }
-  
+/* Basic reset and font setup */
+body, ion-app, ion-content {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+}
 
-.home-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    background-color: #f9f9f9;
-  }
-  
-  .form-section,
-  .food-search-section,
-  .workout-list-section {
-    padding: 10px;
-    border-radius: 10px;
-    background: #fff;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    margin: 15px 0;
-    transition: all 0.3s ease-in-out;
-  }
-  
-  h2 {
-    font-size: 24px; 
-    font-weight: bold; 
-    text-align: center; /* Center the heading */
-    margin-bottom: 15px; 
-    letter-spacing: 1px;
-  }
-  
-  
-  .primary-button {
-    margin-top: 10px;
-    border-radius: 8px;
-    background: linear-gradient(90deg, #ff7e5f, #feb47b);
-    color: white;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  .workout-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px;
-    background: #fafafa;
-    border-radius: 8px;
-    margin: 8px 0;
-    transition: transform 0.3s ease-in-out;
-  }
-  
-  .workout-item:hover {
-    transform: scale(1.05);
-  }
-  
-  .edit-icon,
-  .delete-icon {
-    margin-left: 10px;
-    font-size: 20px;
-    color: #ff7e5f;
-    cursor: pointer;
-  }
-  
-  .no-workouts-text {
-    color: #999;
-    text-align: center;
-    margin-top: 20px;
-  }
-  .input-item ion-label {
-    margin-bottom: 12px; 
-  }
-  
-  .input-item ion-input {
-    margin-top: 8px;      
-    padding-left: 8px;   
-  }
-  
-    
+/* Card container */
+.workout-card {
+  margin: 16px;
+  border-radius: 12px;
+}
+
+/* IonCardTitle styling */
+.ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  padding-left: 13px;
+}
+
+/* IonItem styling */
+.input-item {
+  --inner-border-width: 0; 
+  margin-bottom: 16px;
+  background: transparent;
+}
+
+.label-wrapper {
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.ion-label-styled {
+  font-size: 0.95rem;
+  color: #bbb;
+  font-weight: 600;
+}
+
+/* Custom input style (like the uiverse sample) */
+.input {
+  color: #0d0c0c;
+  border: 2px solid #8707ff;
+  border-radius: 10px;
+  padding: 10px 25px;
+  background: transparent;
+  max-width: 250px;
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.input:focus {
+  box-shadow: 0 0 8px #8707ff;
+  border-color: #b984ff;
+}
+
+.input:active {
+  box-shadow: 2px 2px 15px #8707ff inset;
+}
+
+/* Buttons */
+.action-button {
+  margin-top: 12px;
+  --border-radius: 8px;
+  --padding-start: 12px;
+  --padding-end: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* White text, dark background */
+.small-input {
+  width: 90px; 
+  color: #fff;           
+  background-color: #faf9f9;
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #aaa; 
+  outline: none;
+}
+
+
+/* Make the buttons narrower */
+.small-button {
+  width: 130px; 
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+/* For modern browsers */
+.input::placeholder {
+  font-size: 8px;
+  font-weight: 200;
+}
+
+/* For older Safari and Chrome versions, use the vendor prefix */
+.input::-webkit-input-placeholder {
+  font-size: 10px;
+  font-weight: 200;
+}
+
+/* calori Form */
+.calorie-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Single line for both labels and inputs */
+.calorie-inputs-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem; /* space between label & input, etc. */
+}
+
+/* White label text */
+.white-label {
+  color: #f4f1f1;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Small input with black text */
+.small-input {
+  width: 90px; 
+  color: #000; 
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+/* button search */
+
+.button {
+  width: 95px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  background-color: rgb(43, 74, 161);
+  border-radius: 10px;
+  color: rgb(247, 247, 247);
+  font-weight: 500;
+  border: none;
+  position: relative;
+  cursor: pointer;
+  transition-duration: 0.2s;
+  box-shadow: 5px 5px 10px rgba(18, 18, 18, 0.116);
+  padding-left: 8px;
+  transition-duration: 0.5s;
+  margin-left: 13px;
+}
+
+.svgIcon {
+  height: 25px;
+  transition-duration: 1.5s;
+}
+
+/* Fill color for the svg path */
+.bell path {
+  fill: rgb(253, 252, 252);
+}
+
+
+
+.button:hover .svgIcon {
+  transform: rotate(250deg);
+  transition-duration: 1.5s;
+}
+/* Save Button */
+
+.bookmarkBtn {
+  width: 100px;
+  height: 40px;
+  border-radius: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.349);
+  background-color: rgb(12, 12, 12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition-duration: 0.3s;
+  overflow: hidden;
+  margin-left: 10px;
+}
+
+.IconContainer {
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(to bottom, rgb(88, 24, 237), rgb(104, 70, 255));
+  border-radius: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  z-index: 2;
+  transition-duration: 0.3s;
+}
+
+.icon {
+  border-radius: 1px;
+}
+
+.text {
+  height: 100%;
+  width: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 1;
+  transition-duration: 0.3s;
+  font-size: 1.04em;
+}
+
+.bookmarkBtn:hover .IconContainer {
+  width: 90px;
+  transition-duration: 0.3s;
+}
+
+.bookmarkBtn:hover .text {
+  transform: translate(10px);
+  width: 0;
+  font-size: 0;
+  transition-duration: 0.3s;
+}
+
+.bookmarkBtn:active {
+  transform: scale(0.95);
+  transition-duration: 0.3s;
+}
+

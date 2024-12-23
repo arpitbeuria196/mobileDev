@@ -1,9 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.technyks.FitnessTrackerApp',
-  appName: 'FitnessTrackerApp',
-  webDir: 'dist',
+  appId: 'com.technyks.FitFoodTrackerApp',
+  appName: 'FitFoodTrackerApp',
+  webDir: 'www',
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000, 

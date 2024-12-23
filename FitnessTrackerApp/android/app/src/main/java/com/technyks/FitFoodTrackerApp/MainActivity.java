@@ -1,4 +1,4 @@
-package com.technyks.FitnessTrackerApp;
+package com.technyks.FitFoodTrackerApp;
 
 import com.getcapacitor.BridgeActivity;
 
