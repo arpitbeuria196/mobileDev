@@ -1,15 +1,15 @@
-/* Basic reset and font setup */
+
 body, ion-app, ion-content {
   margin: 0;
   padding: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
     Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
 }
-/* Give the IonToolbar a gradient background */
+
 .custom-toolbar {
   --background: linear-gradient(90deg, #6200EE, #03DAC5);
 }
-/* Error Handling */
+
 .field-error {
   color: #d32f2f;   
   font-size: 0.85rem;
@@ -31,7 +31,7 @@ body, ion-app, ion-content {
   padding-right: 1rem;   
 }
 
-/* Style the Logout Button */
+
 .logout-button {
   --background: #1e81ea; 
   --border-radius: 12px;
@@ -42,7 +42,6 @@ body, ion-app, ion-content {
   margin-left: auto;      
 }
 
-/* Optional hover/active styling for the button (desktop or web) */
 .logout-button:hover {
   filter: brightness(1.1);
 }
@@ -52,13 +51,13 @@ body, ion-app, ion-content {
 }
 
 
-/* Card container */
+
 .workout-card {
   margin: 16px;
   border-radius: 12px;
 }
 
-/* IonCardTitle styling */
+
 .ion-card-title {
   font-size: 1.2rem;
   font-weight: 600;
@@ -66,7 +65,7 @@ body, ion-app, ion-content {
   padding-left: 13px;
 }
 
-/* IonItem styling */
+
 .input-item {
   --inner-border-width: 0; 
   margin-bottom: 16px;
@@ -84,7 +83,6 @@ body, ion-app, ion-content {
   font-weight: 600;
 }
 
-/* Custom input style (like the uiverse sample) */
 .input {
   color: #0d0c0c;
   border: 2px solid #8707ff;
@@ -116,7 +114,6 @@ body, ion-app, ion-content {
   font-size: 1rem;
 }
 
-/* White text, dark background */
 .small-input {
   width: 90px; 
   color: #fff;           
@@ -129,7 +126,6 @@ body, ion-app, ion-content {
 }
 
 
-/* Make the buttons narrower */
 .small-button {
   width: 130px; 
   display: inline-flex;
@@ -141,8 +137,6 @@ body, ion-app, ion-content {
   font-size: 8px;
   font-weight: 200;
 }
-
-/* For older Safari and Chrome versions, use the vendor prefix */
 .input::-webkit-input-placeholder {
   font-size: 10px;
   font-weight: 200;
@@ -155,11 +149,11 @@ body, ion-app, ion-content {
   gap: 1rem;
 }
 
-/* Single line for both labels and inputs */
+
 .calorie-inputs-line {
   display: flex;
   align-items: center;
-  gap: 0.75rem; /* space between label & input, etc. */
+  gap: 0.75rem;
 }
 
 /* White label text */
@@ -169,7 +163,7 @@ body, ion-app, ion-content {
   font-weight: 600;
 }
 
-/* Small input with black text */
+
 .small-input {
   width: 90px; 
   color: #000; 
@@ -179,7 +173,7 @@ body, ion-app, ion-content {
   border: 1px solid #ccc;
   outline: none;
 }
-/* button search */
+
 
 .button {
   width: 95px;
@@ -207,7 +201,7 @@ body, ion-app, ion-content {
   transition-duration: 1.5s;
 }
 
-/* Fill color for the svg path */
+
 .bell path {
   fill: rgb(253, 252, 252);
 }

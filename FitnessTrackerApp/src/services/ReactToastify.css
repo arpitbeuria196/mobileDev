@@ -1,4 +1,4 @@
-/* Increase z-index for Toastify containers */
+
 .Toastify__toast-container {
     z-index: 999999 !important; 
   }

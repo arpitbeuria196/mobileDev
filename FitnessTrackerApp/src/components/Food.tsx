@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { IonButton, IonIcon } from '@ionic/react';
 import { addCircleOutline, removeCircleOutline } from 'ionicons/icons';
-import './Food.css'; // Ensure you have this CSS file
+import './Food.css'; 
 
 interface FoodCardProps {
   foodCalories: number;
@@ -54,26 +54,26 @@ const FoodCard: React.FC<FoodCardProps> = ({
           <div className="flip-card-back">
             <p className="title">{foodNutrition.title}</p>
             <p>
-              <span className="detail-label">Calories:</span> {foodCalories} kcal
+              <span className="detailed-label">Calories:</span> {foodCalories} kcal
             </p>
             <p>
-              <span className="detail-label">Carbs:</span> {foodNutrition.carbs} g
+              <span className="detailed-label">Carbs:</span> {foodNutrition.carbs} 
             </p>
             <p>
-              <span className="detail-label">Fat:</span> {foodNutrition.fat} g
+              <span className="detailed-label">Fat:</span> {foodNutrition.fat} 
             </p>
             <p>
-              <span className="detail-label">Protein:</span> {foodNutrition.protein} g
+              <span className="detailed-label">Protein:</span> {foodNutrition.protein} 
             </p>
           </div>
           <div className="controls">
-            <IonButton onClick={(event) => handleDecrease(event)} color="danger" disabled={count <= 0}>
+            <button className='decrease-button' onClick={(event) => handleDecrease(event)} color="danger" disabled={count <= 0}>
               <IonIcon icon={removeCircleOutline} />
-            </IonButton>
-            <IonButton onClick={(event) => handleIncrease(event)} color="success">
+            </button>
+            <button className ='increase-button' onClick={(event) => handleIncrease(event)} color="success">
               <IonIcon icon={addCircleOutline} />
               <span className="count">{count}</span>
-            </IonButton>
+            </button>
           </div>
         </div>
         

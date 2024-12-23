@@ -34,27 +34,24 @@ import FoodCard from '../components/Food';
 
 import './Home.css';
 
-/** 1) Import React Toastify (and CSS) */
+
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Home: React.FC = () => {
   const history = useHistory();
 
-  // *** State for workouts, user, etc. ***
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  // *** Input fields for the new workout ***
   const [activity, setActivity] = useState('');
   const [duration, setDuration] = useState('');
 
-  // *** Inline error states for activity/duration ***
+
   const [activityError, setActivityError] = useState('');
   const [durationError, setDurationError] = useState('');
 
-  // *** State for images, location, etc. ***
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [caloriesTaken, setCaloriesTaken] = useState<number>();
   const [caloriesBurnt, setCaloriesBurnt] = useState<number>();
@@ -66,7 +63,7 @@ const Home: React.FC = () => {
     lng: -6.26031,
   });
 
-  // *** State for food search logic ***
+
   const [minCalories, setMinCalories] = useState<number>();
   const [maxCalories, setMaxCalories] = useState<number>();
   const [foodCalories, setFoodCalories] = useState<number>();
@@ -74,7 +71,7 @@ const Home: React.FC = () => {
   const [foodImage, setFoodImage] = useState<any>(null);
   const [hasSearched, setHasSearched] = useState<boolean>(false);
 
-  // *** Initialize reference for hidden file input ***
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --------------------------------------------------
@@ -354,7 +351,9 @@ const Home: React.FC = () => {
         ==========================*/}
         <IonCard>
           <IonCardHeader>
-            <IonCardTitle className="ion-card-title">Log a Workout</IonCardTitle>
+            <IonCardTitle className="ion-card-title">
+            {editIndex !== null ? 'Edit Workout' : 'Log a Workout'}
+              </IonCardTitle>
           </IonCardHeader>
 
           <IonCardContent>
@@ -463,77 +462,7 @@ const Home: React.FC = () => {
           </IonCardContent>
         </IonCard>
 
-        {/* =========================
-            Auto Calories Calculation
-        ==========================*/}
-        <IonCard>
-          <IonCardHeader>
-            <IonCardTitle className="ion-card-title">Auto Calories Calculation</IonCardTitle>
-          </IonCardHeader>
-          <IonCardContent>
-            {/* Calories Gained */}
-            <IonItem className="input-item">
-              <div className="label-wrapper">
-                <IonLabel position="stacked" className="ion-label-styled">
-                  Calories Gained
-                </IonLabel>
-              </div>
-              <input
-                className="input"
-                type="text"
-                placeholder="Based on Food selection"
-                readOnly
-                value={caloriesTaken || ''}
-              />
-            </IonItem>
-
-            {/* Calories Burnt */}
-            <IonItem className="input-item">
-              <div className="label-wrapper">
-                <IonLabel position="stacked" className="ion-label-styled">
-                  Calories Burnt
-                </IonLabel>
-              </div>
-              <input
-                className="input"
-                type="text"
-                placeholder="Based on Exercise"
-                readOnly
-                value={caloriesBurnt || ''}
-              />
-            </IonItem>
-
-            {/* Calorie Difference */}
-            <IonItem className="input-item">
-              <div className="label-wrapper">
-                <IonLabel position="stacked" className="ion-label-styled">
-                  Calories Difference
-                </IonLabel>
-              </div>
-              <input
-                className="input"
-                type="text"
-                placeholder="Based on Exercise"
-                readOnly
-                value={
-                  caloriesTaken !== undefined && caloriesBurnt !== undefined
-                    ? Math.round(caloriesTaken - caloriesBurnt)
-                    : ''
-                }
-                style={{
-                  color:
-                    caloriesTaken !== undefined && caloriesBurnt !== undefined
-                      ? caloriesTaken - caloriesBurnt > 0
-                        ? '#388E3C'
-                        : '#D32F2F'
-                      : '#000',
-                }}
-              />
-            </IonItem>
-          </IonCardContent>
-        </IonCard>
-
-        {/* =========================
+         {/* =========================
             Search by Calories
         ==========================*/}
         <IonCard>
@@ -621,6 +550,78 @@ const Home: React.FC = () => {
           </IonCardContent>
         </IonCard>
 
+
+        {/* =========================
+            Auto Calories Calculation
+        ==========================*/}
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle className="ion-card-title">Auto Calories Calculation</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {/* Calories Gained */}
+            <IonItem className="input-item">
+              <div className="label-wrapper">
+                <IonLabel position="stacked" className="ion-label-styled">
+                  Calories Gained
+                </IonLabel>
+              </div>
+              <input
+                className="input"
+                type="text"
+                placeholder="Based on Food selection"
+                readOnly
+                value={caloriesTaken || ''}
+              />
+            </IonItem>
+
+            {/* Calories Burnt */}
+            <IonItem className="input-item">
+              <div className="label-wrapper">
+                <IonLabel position="stacked" className="ion-label-styled">
+                  Calories Burnt
+                </IonLabel>
+              </div>
+              <input
+                className="input"
+                type="text"
+                placeholder="Based on Exercise"
+                readOnly
+                value={caloriesBurnt || ''}
+              />
+            </IonItem>
+
+            {/* Calorie Difference */}
+            <IonItem className="input-item">
+              <div className="label-wrapper">
+                <IonLabel position="stacked" className="ion-label-styled">
+                  Calories Difference
+                </IonLabel>
+              </div>
+              <input
+                className="input"
+                type="text"
+                placeholder="Based on Exercise"
+                readOnly
+                value={
+                  caloriesTaken !== undefined && caloriesBurnt !== undefined
+                    ? Math.round(caloriesTaken - caloriesBurnt)
+                    : ''
+                }
+                style={{
+                  color:
+                    caloriesTaken !== undefined && caloriesBurnt !== undefined
+                      ? caloriesTaken - caloriesBurnt > 0
+                        ? '#388E3C'
+                        : '#D32F2F'
+                      : '#000',
+                }}
+              />
+            </IonItem>
+          </IonCardContent>
+        </IonCard>
+
+       
         {/* =========================
             Save or Edit Workout
         ==========================*/}

@@ -18,5 +18,4 @@ const fetchUserData = async (userId: string) => {
   }
 };
 
-// Fetch user data from Firestore
 fetchUserData("userId_123");

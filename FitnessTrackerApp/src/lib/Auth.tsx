@@ -17,7 +17,7 @@ import {
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import './Auth.css';
 
-/** 1) Import React Toastify */
+
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -42,7 +42,7 @@ const Auth: React.FC = () => {
       }
     } catch (err) {
       console.error('Error initializing user document:', err);
-      /** 2) Use toast error for the catch block */
+
       toast.error('Error initializing user document: ' + (err as Error).message);
     }
   };
@@ -61,7 +61,6 @@ const Auth: React.FC = () => {
       setError('Google Sign-In failed. Please try again or sign up manually.');
       toast.error('Google Sign-In failed: ' + err.message);
 
-      // Switch to signup form after 5s if needed
       setTimeout(() => {
         setError(null);
         setIsSignedInForm(false);
@@ -150,11 +149,6 @@ const Auth: React.FC = () => {
               </span>
             </p>
           </form>
-
-          {/* Optional: Add a separate Google Sign-In button */}
-          <button type="button" onClick={handleGoogleSignIn} className="google-btn">
-            Sign in with Google
-          </button>
         </div>
       </IonContent>
     </IonPage>
