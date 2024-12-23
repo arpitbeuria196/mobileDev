@@ -20,7 +20,8 @@ import {
   IonImg,
   IonLabel,
   IonButton,
-  IonIcon
+  IonIcon,
+  IonList
 } from '@ionic/react';
 import { cameraOutline, folderOutline, closeOutline } from 'ionicons/icons';
 import { useHistory } from 'react-router-dom';
@@ -33,36 +34,81 @@ import FoodCard from '../components/Food';
 
 import './Home.css';
 
+/** 1) Import React Toastify (and CSS) */
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 const Home: React.FC = () => {
-  const [activity, setActivity] = useState('');
-  const [duration, setDuration] = useState('');
   const history = useHistory();
+
+  // *** State for workouts, user, etc. ***
   const [workouts, setWorkouts] = useState<any[]>([]);
   const [user, setUser] = useState<any>(null);
   const [editIndex, setEditIndex] = useState<number | null>(null);
 
-  const [minCalories, setMinCalories] = useState<number>();
-  const [maxCalories, setMaxCalories] = useState<number>();
-  const [foodCalories, setFoodCalories] = useState<number>();
-  const [foodNutrition, setFoodNutrition] = useState<any>(null);
-  const [foodImage, setFoodImage] = useState<any>(null);
+  // *** Input fields for the new workout ***
+  const [activity, setActivity] = useState('');
+  const [duration, setDuration] = useState('');
+
+  // *** Inline error states for activity/duration ***
+  const [activityError, setActivityError] = useState('');
+  const [durationError, setDurationError] = useState('');
+
+  // *** State for images, location, etc. ***
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [caloriesTaken, setCaloriesTaken] = useState<number>();
   const [caloriesBurnt, setCaloriesBurnt] = useState<number>();
   const [calorieMessage, setCalorieMessage] = useState<string>('');
   const [calorieDifference, setCalorieDifference] = useState<number>();
-  const [hasSearched, setHasSearched] = useState<boolean>(false);
   const [image, setImage] = useState<any>('');
   const [location, setLocation] = useState<{ lat: number; lng: number }>({
     lat: 53.349805,
     lng: -6.26031,
   });
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [fetchedImage, setFetchedImage] = useState<string | null>(null);
 
-  // Reference to the hidden file input
+  // *** State for food search logic ***
+  const [minCalories, setMinCalories] = useState<number>();
+  const [maxCalories, setMaxCalories] = useState<number>();
+  const [foodCalories, setFoodCalories] = useState<number>();
+  const [foodNutrition, setFoodNutrition] = useState<any>(null);
+  const [foodImage, setFoodImage] = useState<any>(null);
+  const [hasSearched, setHasSearched] = useState<boolean>(false);
+
+  // *** Initialize reference for hidden file input ***
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Take photo from camera
+  // --------------------------------------------------
+  //              LIFECYCLE & FIRESTORE
+  // --------------------------------------------------
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        const unsubscribeWorkouts = fetchWorkouts(currentUser.uid);
+        return () => unsubscribeWorkouts();
+      } else {
+        history.push('/auth');
+      }
+    });
+    return () => unsubscribe();
+  }, [history]);
+
+  const fetchWorkouts = (userId: string) => {
+    const userDocRef = doc(firestore, 'users', userId);
+    const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const userData = docSnapshot.data();
+        setWorkouts(userData?.workouts || []);
+      } else {
+        setWorkouts([]);
+      }
+    });
+    return unsubscribe;
+  };
+
+  // --------------------------------------------------
+  //              CAMERA & FILE UPLOAD
+  // --------------------------------------------------
   const takePhoto = async () => {
     try {
       const photo = await Camera.getPhoto({
@@ -72,12 +118,16 @@ const Home: React.FC = () => {
       });
       const imageUrl = photo.webPath;
       setUploadedImage(imageUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error taking photo:', error);
+      toast.error('Error taking photo: ' + error.message);
     }
   };
 
-  // File Upload
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files || event.target.files.length === 0) return;
 
@@ -93,52 +143,40 @@ const Home: React.FC = () => {
           data: base64String.split(',')[1],
           directory: Directory.Data,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error saving file:', error);
+        toast.error('Error saving file: ' + error.message);
       }
     };
 
     reader.readAsDataURL(file);
   };
 
-  // Trigger file input by clicking the hidden <input>
-  const openFilePicker = () => {
-    fileInputRef.current?.click();
+  const removeImage = async () => {
+    setUploadedImage(null);
   };
 
-  const fetchWorkouts = (userId: string) => {
-    const userDocRef = doc(firestore, 'users', userId);
-    const unsubscribe = onSnapshot(userDocRef, (docSnapshot) => {
-      if (docSnapshot.exists()) {
-        const userData = docSnapshot.data();
-        setWorkouts(userData?.workouts || []);
-      } else {
-        setWorkouts([]);
-      }
-    });
-    return unsubscribe;
-  };
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        const unsubscribeWorkouts = fetchWorkouts(currentUser.uid);
-        return () => unsubscribeWorkouts();
-      } else {
-        history.push('/auth');
-      }
-    });
-    return () => unsubscribe();
-  }, [history]);
-
+  // --------------------------------------------------
+  //           HANDLE SAVE WORKOUT
+  // --------------------------------------------------
   const handleSaveWorkout = async () => {
-    if (!activity || !duration) {
-      alert('Activity and duration are required!');
+    // Clear previous field errors
+    setActivityError('');
+    setDurationError('');
+
+    // Check required fields
+    if (!activity) {
+      setActivityError('Activity is required');
+      toast.error('Activity is required!');
       return;
     }
-    const caloriesBurned = handleCalorieCalculation(activity, parseInt(duration));
+    if (!duration) {
+      setDurationError('Duration is required');
+      toast.error('Duration is required!');
+      return;
+    }
 
+    const caloriesBurned = handleCalorieCalculation(activity, parseInt(duration));
     if (user) {
       const workoutData = {
         id: new Date().getTime().toString(),
@@ -163,8 +201,12 @@ const Home: React.FC = () => {
         }
 
         await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
+
+        // Reset fields after success
         setActivity('');
         setDuration('');
+        setActivityError('');
+        setDurationError('');
         setCaloriesTaken(0);
         setCaloriesBurnt(3.2);
         setFoodCalories(0);
@@ -172,14 +214,19 @@ const Home: React.FC = () => {
         setUploadedImage('');
         setFoodNutrition(null);
         setEditIndex(null);
+
         updateCalorieMessage(caloriesBurned);
-      } catch (error) {
+        toast.success('Workout saved successfully!');
+      } catch (error: any) {
         console.error('Error saving workout:', error);
+        toast.error('Error saving workout: ' + error.message);
       }
     }
   };
 
-  // handle Search Food
+  // --------------------------------------------------
+  //           HANDLE FOOD SEARCH
+  // --------------------------------------------------
   const handleSearchFood = async () => {
     setHasSearched(true);
     try {
@@ -205,17 +252,15 @@ const Home: React.FC = () => {
         setFoodCalories(0);
         setFoodNutrition(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching food data:', error);
+      toast.error('Error fetching food data: ' + error.message);
     }
   };
 
-  //remove Images
-  const removeImage = async () => {
-    setUploadedImage(null);
-  };
-
-  // Calories Management
+  // --------------------------------------------------
+  //           CALCULATION & MANAGEMENT
+  // --------------------------------------------------
   const caloriesManagement = (calories: number) => {
     setCaloriesTaken((prevCalories) => (prevCalories || 0) + calories);
   };
@@ -247,6 +292,9 @@ const Home: React.FC = () => {
     }
   };
 
+  // --------------------------------------------------
+  //           DELETE & EDIT
+  // --------------------------------------------------
   const handleDeleteWorkout = async (workoutId: string) => {
     try {
       const userDocRef = doc(firestore, 'users', user?.uid);
@@ -262,8 +310,9 @@ const Home: React.FC = () => {
           await setDoc(userDocRef, { workouts: updatedWorkouts }, { merge: true });
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting workout:', error);
+      toast.error('Error deleting workout: ' + error.message);
     }
   };
 
@@ -274,19 +323,36 @@ const Home: React.FC = () => {
     setEditIndex(index);
   };
 
+  // --------------------------------------------------
+  //           STYLE FOR CALORIE MESSAGE
+  // --------------------------------------------------
   const calorieStatusStyle =
     calorieDifference < 0 ? { color: '#388E3C' } : { color: '#D32F2F' };
 
+  // --------------------------------------------------
+  //           RENDER
+  // --------------------------------------------------
   return (
     <IonPage>
       <IonHeader>
-        <IonToolbar>
-          <IonTitle>Welcome, {user?.displayName || 'User'}</IonTitle>
+        <IonToolbar className="custom-toolbar">
+          <IonTitle className="title">
+            Welcome, {user?.displayName || "User"} to FitFood Tracker 
+            {/* Logout Button */}
+            <IonButton onClick={() => signOut(auth)} className="logout-button">
+              Logout
+            </IonButton>
+          </IonTitle>
         </IonToolbar>
       </IonHeader>
 
       <IonContent fullscreen>
-        <IonCard className="workout-card">
+        <ToastContainer position="top-center" autoClose={2500} />
+
+        {/* =========================
+            Log a Workout Card
+        ==========================*/}
+        <IonCard>
           <IonCardHeader>
             <IonCardTitle className="ion-card-title">Log a Workout</IonCardTitle>
           </IonCardHeader>
@@ -299,7 +365,6 @@ const Home: React.FC = () => {
                   Activity
                 </IonLabel>
               </div>
-
               <input
                 className="input"
                 type="text"
@@ -310,6 +375,12 @@ const Home: React.FC = () => {
                   handleCalorieCalculation(e.target.value, parseInt(duration));
                 }}
               />
+              {/* Inline error for Activity */}
+              {activityError && (
+                <p className="field-error">
+                  {activityError}
+                </p>
+              )}
             </IonItem>
 
             {/* Duration input (with step=1 for up/down arrows) */}
@@ -319,7 +390,6 @@ const Home: React.FC = () => {
                   Duration (Minutes)
                 </IonLabel>
               </div>
-
               <input
                 className="input"
                 type="number"
@@ -331,9 +401,24 @@ const Home: React.FC = () => {
                   handleCalorieCalculation(activity, parseInt(e.target.value));
                 }}
               />
+              {/* Inline error for Duration */}
+              {durationError && (
+                <p className="field-error">
+                  {durationError}
+                </p>
+              )}
             </IonItem>
+          </IonCardContent>
+        </IonCard>
 
-            {/* Camera button */}
+        {/* =========================
+            Upload Section
+        ==========================*/}
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle className="ion-card-title">Upload Section</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
             <IonButton
               color="primary"
               onClick={takePhoto}
@@ -343,7 +428,6 @@ const Home: React.FC = () => {
               Photo
             </IonButton>
 
-            {/* File Manager button & hidden input */}
             <IonButton
               color="secondary"
               onClick={openFilePicker}
@@ -361,11 +445,10 @@ const Home: React.FC = () => {
               onChange={handleFileUpload}
             />
 
-            {/* Display the image, plus a Remove button if we have an image */}
+            {/* Display the image + Remove button if we have an image */}
             {uploadedImage && (
               <div style={{ marginTop: '16px' }}>
                 <IonImg src={uploadedImage} alt="Uploaded" />
-
                 <IonButton
                   color="danger"
                   fill="outline"
@@ -380,12 +463,13 @@ const Home: React.FC = () => {
           </IonCardContent>
         </IonCard>
 
-        {/* Calories Calculation Card */}
-        <IonCard className="workout-card">
+        {/* =========================
+            Auto Calories Calculation
+        ==========================*/}
+        <IonCard>
           <IonCardHeader>
             <IonCardTitle className="ion-card-title">Auto Calories Calculation</IonCardTitle>
           </IonCardHeader>
-
           <IonCardContent>
             {/* Calories Gained */}
             <IonItem className="input-item">
@@ -394,7 +478,6 @@ const Home: React.FC = () => {
                   Calories Gained
                 </IonLabel>
               </div>
-
               <input
                 className="input"
                 type="text"
@@ -411,7 +494,6 @@ const Home: React.FC = () => {
                   Calories Burnt
                 </IonLabel>
               </div>
-
               <input
                 className="input"
                 type="text"
@@ -420,6 +502,7 @@ const Home: React.FC = () => {
                 value={caloriesBurnt || ''}
               />
             </IonItem>
+
             {/* Calorie Difference */}
             <IonItem className="input-item">
               <div className="label-wrapper">
@@ -427,7 +510,6 @@ const Home: React.FC = () => {
                   Calories Difference
                 </IonLabel>
               </div>
-
               <input
                 className="input"
                 type="text"
@@ -450,109 +532,144 @@ const Home: React.FC = () => {
             </IonItem>
           </IonCardContent>
         </IonCard>
+
+        {/* =========================
+            Search by Calories
+        ==========================*/}
         <IonCard>
-  <IonCardHeader>
-    <IonCardTitle className="ion-card-title">Search by Calories</IonCardTitle>
-  </IonCardHeader>
-
-  <IonCardContent>
-    {/* New form with 2 labels and 2 inputs in one line */}
-    <IonItem className="input-item">
+          <IonCardHeader>
+            <IonCardTitle className="ion-card-title">Search by Calories</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {/* Min Calories */}
+            <IonItem className="input-item">
               <div className="label-wrapper">
-    <IonLabel position="stacked" className="ion-label-styled">
-    Min Calories
-    </IonLabel>
+                <IonLabel position="stacked" className="ion-label-styled">
+                  Min Calories
+                </IonLabel>
               </div>
               <input
-          className="small-input"
-          type="number"
-          placeholder="Cal"
-          value={minCalories}
-          onChange={(e) => setMinCalories(Number(e.target.value))}
-        />
-    </IonItem>
+                className="small-input"
+                type="number"
+                placeholder="Cal"
+                value={minCalories}
+                onChange={(e) => setMinCalories(Number(e.target.value))}
+              />
+            </IonItem>
 
-    <IonItem className="input-item">
+            {/* Max Calories */}
+            <IonItem className="input-item">
               <div className="label-wrapper">
-    <IonLabel position="stacked" className="ion-label-styled">
-    Max Calories
-    </IonLabel>
+                <IonLabel position="stacked" className="ion-label-styled">
+                  Max Calories
+                </IonLabel>
               </div>
               <input
-          className="small-input"
-          type="number"
-          placeholder="Cal"
-          value={maxCalories}
-          onChange={(e) => setMaxCalories(Number(e.target.value))}
-        />
-    </IonItem>
-    <button className="button" onClick={handleSearchFood}>
-        <svg
-          className="svgIcon"
-          viewBox="0 0 512 512"
-          height="1em"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"></path>
-        </svg>
-        Explore
-      </button>
+                className="small-input"
+                type="number"
+                placeholder="Cal"
+                value={maxCalories}
+                onChange={(e) => setMaxCalories(Number(e.target.value))}
+              />
+            </IonItem>
 
-  </IonCardContent>
-</IonCard>
+            <button className="button" onClick={handleSearchFood}>
+              <svg
+                className="svgIcon"
+                viewBox="0 0 512 512"
+                height="1em"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"></path>
+              </svg>
+              Explore
+            </button>
+          </IonCardContent>
+        </IonCard>
 
-<IonCard>
-  <IonCardHeader>
-    <IonCardTitle className="ion-card-title">Search Results</IonCardTitle>
-  </IonCardHeader>
+        {/* =========================
+            Search Results
+        ==========================*/}
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle className="ion-card-title">Search Results</IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            {!hasSearched && (
+              <IonText color="medium">
+                <p style={{ textAlign: 'center', marginTop: '12px' }}>
+                  No food search yet.
+                </p>
+              </IonText>
+            )}
+            {foodNutrition && (
+              <IonGrid>
+                <IonRow>
+                  {foodNutrition.map((food: any, index: number) => (
+                    <IonCol key={index} size="6">
+                      <FoodCard
+                        foodCalories={food.calories}
+                        caloriesManagement={caloriesManagement}
+                        foodNutrition={food}
+                        foodImage={food.image}
+                      />
+                    </IonCol>
+                  ))}
+                </IonRow>
+              </IonGrid>
+            )}
+          </IonCardContent>
+        </IonCard>
 
-  <IonCardContent>
+        {/* =========================
+            Save or Edit Workout
+        ==========================*/}
+        <IonCard>
+          <IonCardHeader>
+            <IonCardTitle className="ion-card-title">
+              {editIndex !== null ? 'Edit Workouts' : 'Save Workout'}
+            </IonCardTitle>
+          </IonCardHeader>
+          <IonCardContent>
+            <button className="bookmarkBtn" onClick={handleSaveWorkout}>
+              <span className="IconContainer">
+                <svg
+                  viewBox="0 0 384 512"
+                  height="0.9em"
+                  className="icon"
+                >
+                  <path
+                    d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"
+                  ></path>
+                </svg>
+              </span>
+              <p className="text">Save</p>
+            </button>
+            <h3 style={calorieStatusStyle} className="calorie-status">
+              {calorieMessage}
+            </h3>
+          </IonCardContent>
+        </IonCard>
 
-  {!hasSearched && (
-            <IonText color="medium">
-              <p style={{ textAlign: 'center', marginTop: '12px' }}>No food search yet.</p>
-            </IonText>
-          )}
+        {/* =========================
+            List of Workouts
+        ==========================*/}
+        <IonCard>
+          <IonCardContent>
+            <IonList className="workout-list">
+              {workouts.map((workout, index) => (
+                <WorkoutCard
+                  key={workout.id}
+                  workout={workout}
+                  onDelete={() => handleDeleteWorkout(workout.id)}
+                  onEdit={() => handleEditWorkout(index)}
+                />
+              ))}
+            </IonList>
+          </IonCardContent>
+        </IonCard>
 
-{foodNutrition && (
-            <IonGrid>
-              <IonRow>
-                {foodNutrition.map((food: any, index: number) => (
-                  <IonCol key={index} size="6">
-                    <FoodCard
-                      foodCalories={food.calories}
-                      caloriesManagement={caloriesManagement}
-                      foodNutrition={food}
-                      foodImage={food.image}
-                    />
-                  </IonCol>
-                ))}
-              </IonRow>
-            </IonGrid>
-          )}
-
-  </IonCardContent>
-  </IonCard>
-  <IonCard>
-  <IonCardHeader>
-    <IonCardTitle className="ion-card-title">Save Workout</IonCardTitle>
-  </IonCardHeader>
-  <IonCardContent>
-  <button className="bookmarkBtn">
-      <span className="IconContainer">
-        <svg viewBox="0 0 384 512" height="0.9em" className="icon">
-          <path
-            d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"
-          ></path>
-        </svg>
-      </span>
-   <p className="text">Save</p>
-    </button>
-    </IonCardContent>
-    </IonCard>
-
-</IonContent>
-
+      </IonContent>
     </IonPage>
   );
 };

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useHistory } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth'; 
 import { auth } from './config/firebaseConfig';
+import { ToastContainer } from 'react-toastify';
 
 /* Core CSS required for Ionic components to work properly */
 import '@ionic/react/css/core.css';
@@ -48,6 +49,7 @@ const App: React.FC = () => {
 
   return (
     <IonApp>
+       <ToastContainer position="top-center" autoClose={3500} />
       <IonReactRouter>
         <IonRouterOutlet>
           {/* Use Switch for routing */}

@@ -1,119 +1,119 @@
 .workout-card {
-    width: 320px;
-    background: #fff;
-    color: black;
-    position: relative;
-    border-radius: 2.5em;
-    padding: 2em;
-    transition: transform 0.4s ease;
-  }
-  
-  .workout-card-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    gap: 3em;
-    height: 100%;
-    transition: transform 0.4s ease;
-  }
-  
-  .workout-card-top, .workout-card-bottom {
-    display: flex;
-    justify-content: space-between;
-  }
-  
-  .workout-card-title, .workout-card-date {
-    margin: 0;
-  }
-  
-  .workout-card-title {
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  
-  .workout-card-date {
-    font-weight: 600;
-    font-size: 0.9rem;
-    color: #333;
-  }
-  
-  .workout-card-bottom {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .workout-card-bottom p {
-    margin: 0;
-    font-weight: 600;
-  }
-  
-  .workout-card-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px; /* Increased gap between icons */
-  }
-  
-  .workout-card-actions .edit-btn,
-  .workout-card-actions .delete-btn {
-    border-radius: 50%;
-    padding: 8px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .workout-card-actions .edit-btn:hover,
-  .workout-card-actions .delete-btn:hover {
-    transform: scale(1.2); 
-  }
-  
-  .workout-card-actions .edit-btn,
-  .workout-card-actions .delete-btn {
-    font-size: 1.5rem;
-    transition: transform 0.3s ease;
-  }
-  
-  .workout-card-actions .edit-btn:hover,
-  .workout-card-actions .delete-btn:hover {
-    background-color: transparent;
-  }
-  
-  
-  .workout-card-actions .edit-btn,
-  .workout-card-actions .delete-btn {
-    font-size: 1.2rem;
-  }
-  
-  .workout-card-image {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    display: grid;
-    place-items: center;
-    pointer-events: none;
-  }
-  
-  .workout-card-image svg {
-    width: 4em;
-    height: 4em;
-    transition: transform 0.4s ease;
-  }
-  
-  .workout-card:hover {
-    cursor: pointer;
-    transform: scale(0.97);
-  }
-  
-  .workout-card:hover .workout-card-content {
-    transform: scale(0.96);
-  }
-  
-  .workout-card:hover .workout-card-image svg {
-    transform: scale(1.05);
-  }
-  
-  .workout-card:active {
-    transform: scale(0.9);
-  }
-  
+  background: linear-gradient(135deg, #6557c0 0%, #f4f4f4 100%);
+  width: 320px;
+  color: black;
+  position: relative;
+  border-radius: 2.5em;
+  padding: 2em;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.workout-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 3em;
+  height: 100%;
+  transition: transform 0.4s ease;
+}
+
+.workout-card-top,
+.workout-card-bottom {
+  display: flex;
+  justify-content: space-between;
+}
+
+.workout-card-title,
+.workout-card-date {
+  margin: 0;
+}
+
+.workout-card-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #222;
+}
+
+.workout-card-date {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.workout-card-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.workout-card-bottom p {
+  margin: 0;
+  font-weight: 600;
+  color: #333; 
+}
+
+/* Container for edit + delete buttons */
+.workout-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px; 
+}
+
+/* Make the button square by removing the circular border-radius */
+.workout-card-actions .edit-btn,
+.workout-card-actions .delete-btn {
+  border-radius: 10px; /* changed from 50% to 0 to make them square */
+  padding: 8px;
+  font-size: 1.2rem; 
+  transition: transform 0.3s ease;
+
+  --color: #000; 
+  --background-focused: transparent; 
+  --background-hover: transparent;   
+  --background-activated: transparent;
+}
+
+/* Enlarge on hover (no color change) */
+.workout-card-actions .edit-btn:hover,
+.workout-card-actions .delete-btn:hover {
+  transform: scale(1.3);
+}
+
+.workout-card-actions .edit-btn:focus,
+.workout-card-actions .delete-btn:focus {
+  background-color: transparent !important;
+  outline: none;
+}
+
+.workout-card-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+
+/* Card hover/active effects */
+.workout-card:hover {
+  cursor: pointer;
+  transform: scale(1.01); 
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+}
+
+.workout-card:hover .workout-card-content {
+  transform: scale(0.96);
+}
+
+.workout-card:hover .workout-card-image svg {
+  transform: scale(1.05);
+}
+
+.workout-card:active {
+  transform: scale(0.96);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
